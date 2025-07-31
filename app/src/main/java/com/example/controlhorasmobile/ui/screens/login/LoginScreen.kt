@@ -27,8 +27,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import com.example.controlhorasmobile.R
+import com.example.controlhorasmobile.network.AuthService
 import com.example.controlhorasmobile.network.LoginRequest
 import com.example.controlhorasmobile.network.RetrofitClient
+import com.example.controlhorasmobile.network.UsuarioService
 import com.example.controlhorasmobile.ui.theme.AzulNoche
 import com.example.controlhorasmobile.ui.theme.AzulProfundo
 import com.example.controlhorasmobile.ui.theme.Blanco
@@ -50,7 +52,8 @@ fun LoginScreen(navController: NavController) {
     var mensaje by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     var logoVisible by remember { mutableStateOf(false) }
-    val authService = RetrofitClient.getAuthService()
+    val authService = RetrofitClient.getService(AuthService::class.java)
+    val usuarioService = RetrofitClient.getService(UsuarioService::class.java)
 
     LaunchedEffect(Unit) {
         logoVisible = true
@@ -154,21 +157,19 @@ fun LoginScreen(navController: NavController) {
                     onClick = {
                         scope.launch {
                             try {
-                                val loginRequest = LoginRequest(username, password)
-                                val response = authService.loginUsuario(loginRequest)
+
+                                val response = usuarioService.loginUsuario(
+                                    UsuarioService.LoginRequest(username,password)
+                                )
                                 Log.d(
                                     "Login",
                                     "Código: ${response.code()}, cuerpo: ${response.body()}"
                                 )
                                 if (response.isSuccessful) {
                                     Log.d("Login", "Respuesta recibida ${response.body()}")
-                                    val usuario = response.body()
-                                    val idUsuario = usuario?.id ?: -1L
-                                    val token = response.body()?.token.orEmpty()
+                                    val usuario = response.body()!!
                                     prefs.edit()
-                                        .putString("username", username)
-                                        .putString("token", token)
-                                        .putLong("idUsuario",idUsuario)
+                                        .putString("TOKEN_KEY", usuario.token)
                                         .apply()
 
 

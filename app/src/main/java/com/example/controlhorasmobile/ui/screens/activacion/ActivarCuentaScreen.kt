@@ -22,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.dp
 import com.example.controlhorasmobile.model.DatosActivacion
+import com.example.controlhorasmobile.network.AuthService
 import com.example.controlhorasmobile.network.RetrofitClient
 
 @Composable
@@ -37,7 +38,7 @@ fun ActivarCuentaScreen(
     if (activarToken != null){
         LaunchedEffect(activarToken) {
             try {
-                val authService = RetrofitClient.getAuthService()
+                val authService = RetrofitClient.getService(AuthService::class.java)
                 /*
                 val response = authService.activarCuenta(activarToken!!)
                 if (response.isSuccessful){

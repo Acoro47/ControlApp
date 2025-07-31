@@ -4,7 +4,6 @@ import com.example.controlhorasmobile.model.DatosActivacion
 import com.example.controlhorasmobile.model.dto.UsuarioDTO
 import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.GET
 import retrofit2.http.POST
 
 

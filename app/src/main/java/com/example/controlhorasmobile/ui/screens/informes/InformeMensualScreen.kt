@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.controlhorasmobile.model.ResumenDia
+import com.example.controlhorasmobile.network.InformePdfService
 import com.example.controlhorasmobile.network.RetrofitClient
 import com.example.controlhorasmobile.ui.screens.dashboard.CabeceraDashboardScreen
 import com.example.controlhorasmobile.ui.screens.informes.components.AccionesInforme
@@ -85,7 +86,7 @@ fun InformePreviewScreen(
 
     val scope = rememberCoroutineScope()
 
-    val api = RetrofitClient.getInformeService{ token }
+    val api = { RetrofitClient.getService(InformePdfService::class.java) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -130,10 +131,11 @@ fun InformePreviewScreen(
                     }
                 },
                 onExportar = {
-
+/*
                     val mesParam = mesSeleccionado.value.format(DateTimeFormatter.ofPattern("yyyy-MM"))
                     val bearer = "Bearer $token"
                     LaunchedEffect(mesParam) {
+
                         val response = api.descargarPdf(bearer,mesParam)
 
 
@@ -150,6 +152,8 @@ fun InformePreviewScreen(
                             Toast.makeText(context, "Error descarga: $msg", Toast.LENGTH_SHORT)
                                 .show()
                         }
+
+                         */
                         /*
                         val filename = "Informe_$mesParam.pdf"
                         val file = guardarPdfDesdeResponse(
@@ -164,12 +168,12 @@ fun InformePreviewScreen(
                             } else {
                                 Toast.makeText(context, "Error al generar el PDF:", Toast.LENGTH_SHORT).show()
                             }
-                        } */
-                    }
+                        }
+                    }*/
                 }
             )
 
-
+/*
             LaunchedEffect(mesSeleccionado.value) {
                 val inicio = mesSeleccionado.value.withDayOfMonth(1)
                 val fin =
@@ -211,7 +215,7 @@ fun InformePreviewScreen(
                     }
                 }
             }
-
+*/
             ResumenTotales(
                 horasLaborables,
                 horasFindes,

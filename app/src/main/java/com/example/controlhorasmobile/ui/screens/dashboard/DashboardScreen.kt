@@ -30,7 +30,6 @@ import com.example.controlhorasmobile.model.Registro
 import com.example.controlhorasmobile.model.RegistroItem
 import com.example.controlhorasmobile.model.dto.RegistroDTO
 import com.example.controlhorasmobile.model.dto.toRegistro
-import com.example.controlhorasmobile.network.InformePdfService
 import com.example.controlhorasmobile.network.RetrofitClient
 import com.example.controlhorasmobile.network.UsuarioService
 import com.example.controlhorasmobile.ui.screens.dashboard.components.BotonFichaje
@@ -40,10 +39,8 @@ import com.example.controlhorasmobile.ui.screens.dashboard.logic.DashboardCalcul
 import com.example.controlhorasmobile.ui.theme.AzulNoche
 import com.example.controlhorasmobile.ui.theme.ColorSecundario
 import com.example.controlhorasmobile.utils.cerrarSesion
-import com.google.gson.GsonBuilder
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
-import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -77,9 +74,15 @@ fun DashboardScreen(navController: NavController) {
     val horasMes = remember { derivedStateOf { DashboardCalculations.calcularHorasMes(registrosMes) } }
     val diaLibre = remember { derivedStateOf { DashboardCalculations.obtenerProximoMiercoles() } }
 
-    val api = remember {
-        RetrofitClient.getService <InformePdfService>{ token }
+    val usuarioService = remember {
+        RetrofitClient.getService(
+            UsuarioService::class.java,
+            tokenProvider = { prefs.getString("token", "")}
+            )
     }
+
+
+
     val isLoading = remember { mutableStateOf(false) }
     /**
      * funcion para recargar los registros desde el backend
@@ -101,10 +104,23 @@ fun DashboardScreen(navController: NavController) {
                     desde,
                     hasta
                 )
+
                 val nuevos:List<Registro> = nuevosDto.map { it.toRegistro() }
                 registrosHoy.clear()
                 registrosHoy.addAll(nuevos)
-            } finally {
+
+            } catch (e: retrofit2.HttpException) {
+                if (e.code() == 401){
+                    navController.navigate("login")
+                }
+                else {
+                    Log.e("Dashboard","Error HTTP ${e.code()}")
+                }
+
+            } catch (e: Exception) {
+                Log.e("Dashboard", "Error red u otro: ${e.message}")
+            }
+            finally {
                 isLoading.value = false
             }
 
@@ -131,6 +147,7 @@ fun DashboardScreen(navController: NavController) {
         scope.launch {
             try {
                 val response = usuarioService.registrarEntrada(idUsuario)
+                Log.e("Dashboard", "Llamando a la función de registrar entrada")
                 if (response.isSuccessful) {
                     Log.d("Entrada", "✅ Entrada registrada")
                     recargaRegistros()
@@ -202,7 +219,18 @@ fun DashboardScreen(navController: NavController) {
 
                  */
             }
-        } finally {
+        } catch (e: retrofit2.HttpException){
+            if (e.code() == 401){
+                navController.navigate("login")
+            } else {
+                Log.e("Dashboard", "Error HTTP ${e.code()}")
+            }
+        }
+        catch (e: Exception) {
+            Log.e("Dashboard","Error de red u otro: ${e.message}")
+        }
+
+        finally {
             isLoading.value = false
         }
 

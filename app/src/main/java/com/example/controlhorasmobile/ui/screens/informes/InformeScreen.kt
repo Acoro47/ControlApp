@@ -67,9 +67,9 @@ fun InformeScreen(
     val resumenes = remember { mutableStateListOf<ResumenDia>() }
 
     LaunchedEffect(fechaInicio.value, fechaFin.value) {
-        val nuevos = resumenPeriodo(token,idUsuario, fechaInicio.value, fechaFin.value, context)
+        //val nuevos = resumenPeriodo(token,idUsuario, fechaInicio.value, fechaFin.value, context)
         resumenes.clear()
-        resumenes.addAll(nuevos)
+        //resumenes.addAll(nuevos)
     }
 
 

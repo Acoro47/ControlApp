@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.controlhorasmobile.network.RetrofitClient
+import com.example.controlhorasmobile.network.UsuarioService
 import kotlinx.coroutines.launch
 
 
@@ -67,7 +68,7 @@ fun SolicitarTokenScreen(navController: NavController){
             onClick = {
                 scope.launch {
                     try {
-                        val usuarioService = RetrofitClient.getUsuarioService("")
+                        val usuarioService = RetrofitClient.getService(UsuarioService::class.java)
                         val response = usuarioService.solicitarToken(username, email)
                         if (response.isSuccessful) {
                             mensaje = response.body()?.mensaje ?: "✅ Token enviado. Revisa tu correo."

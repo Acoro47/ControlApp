@@ -3,26 +3,30 @@ package com.example.controlhorasmobile.network
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
     // Modo para producción en render
-    const val BASE_URL = "https://control-horas-app-1.onrender.com/"
+    private const val BASE_URL = "https://control-horas-app-1.onrender.com/"
     // Modo para pruebas en local
     //private const val BASE_URL = "http://10.0.2.2:8080/"
 
 
-    fun buildClient(tokenProvider: (() ->String?)?= null): OkHttpClient {
-
+    private fun buildClient(
+        tokenProvider: (() ->String?)?= null,
+        pdfMode: Boolean = false
+    ): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.HEADERS
         }
 
        return OkHttpClient.Builder()
-           .addInterceptor(logging)
+           .addInterceptor(AuthInterceptor(tokenProvider ?: { null }))
+           .addNetworkInterceptor(logging)
+           .followRedirects(false)
+           .followSslRedirects(false)
            .also { builder ->
                tokenProvider?.let { provider ->
                    builder.addInterceptor(AuthInterceptor(provider))
@@ -33,47 +37,30 @@ object RetrofitClient {
            .build()
     }
 
-    fun buildPdfClient(tokenProvider: (() -> String?)? = null): OkHttpClient {
-        return OkHttpClient.Builder()
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.HEADERS
-            })
-            .also { builder ->
-                tokenProvider?.let { builder.addInterceptor(AuthInterceptor(it)) }
-            }
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .build()
-
-    }
-
-    fun getPdfRetrofit(tokenProvider: (() -> String?)? = null): Retrofit =
-        Retrofit.Builder()
+    /**
+     * Creamos un servicio Retrofit de tipo T
+     *
+     * @param serviceClass Clase de servicio (AuthService::class)
+     * @param tokenProvider Opcional. Provee el token para el interceptor
+     * @param pdfMode Si es true, usa timeout de 60s y no añade converter JSON
+     */
+    fun <T> getService(
+        serviceClass: Class<T>,
+        tokenProvider: (() -> String?)? = null,
+        pdfMode: Boolean = false
+    ): T {
+        val client = buildClient(tokenProvider, pdfMode)
+        val retrofitBuilder = Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(buildPdfClient(tokenProvider))
+            .client(client)
+        if (!pdfMode) {
+            val gson = GsonBuilder()
+                .setLenient()
+                .create()
+            retrofitBuilder.addConverterFactory(GsonConverterFactory.create(gson))
+        }
+        return retrofitBuilder
             .build()
-
-
-    private fun getJsonRetrofit(tokenProvider: (() -> String?)? = null): Retrofit {
-        val gson = GsonBuilder()
-            .setLenient()
-            .create()
-
-        return Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(buildClient(tokenProvider))
-            .addConverterFactory(GsonConverterFactory.create(gson))
-            .build()
+            .create(serviceClass)
     }
-
-    fun getAuthService(): AuthService {
-        return getJsonRetrofit().create(AuthService::class.java)
-    }
-
-    // Servicio de usuario e informes reciben tokenProvider
-    fun getUsuarioService(tokenProvider: () -> String?): UsuarioService =
-        getJsonRetrofit(tokenProvider).create(UsuarioService::class.java)
-
-    fun getInformeService(tokenProvider: () -> String?): InformePdfService =
-        getPdfRetrofit(tokenProvider).create(InformePdfService::class.java)
 }
