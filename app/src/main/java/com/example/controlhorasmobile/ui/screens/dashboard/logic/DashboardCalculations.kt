@@ -12,10 +12,10 @@ object DashboardCalculations {
 
     private val formatoEntrada = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
-    fun obtenerRangoMesActual(): Pair<LocalDate, LocalDate> {
+    fun obtenerRangoMesActual(): Pair<String, String> {
         val hoy = LocalDate.now()
-        val inicio = hoy.withDayOfMonth(1)
-        val fin = hoy.withDayOfMonth(hoy.lengthOfMonth())
+        val inicio = hoy.withDayOfMonth(1).toIsoString()
+        val fin = hoy.withDayOfMonth(hoy.lengthOfMonth()).toIsoString()
 
         return Pair(inicio,fin)
     }

@@ -192,22 +192,21 @@ fun DashboardScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         isLoading.value = true
         try {
-            if (idUsuario != -1L) {
-                val (inicio, final) = DashboardCalculations.obtenerRangoMesActual()
 
-                val desde = inicio.toIsoString()
-                val hasta = final.toIsoString()
+            if (idUsuario != -1L) {
+                val hoyString = LocalDate.now().toIsoString()
+
 
                 val registrosDiaDto: List<RegistroDTO> = usuarioService.obtenerRegistros(
                     idUsuario,
-                    desde,
-                    hasta
+                    hoyString,
+                    hoyString
                 )
                 val registrosDia: List<Registro> = registrosDiaDto.map { it.toRegistro() }
                 registrosHoy.clear()
                 registrosHoy.addAll(registrosDia)
 
-                /*
+                val (inicio, final) = DashboardCalculations.obtenerRangoMesActual()
                 val registrosMesActualDto: List<RegistroDTO> = usuarioService.obtenerRegistros(
                     idUsuario,
                     inicio,
@@ -217,7 +216,7 @@ fun DashboardScreen(navController: NavController) {
                 registrosMes.clear()
                 registrosMes.addAll(registros)
 
-                 */
+
             }
         } catch (e: retrofit2.HttpException){
             if (e.code() == 401){
