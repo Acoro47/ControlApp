@@ -159,16 +159,13 @@ fun LoginScreen(navController: NavController) {
                                 val response = authService.loginUsuario(
                                     LoginRequest(username,password)
                                 )
-                                Log.d(
-                                    "Login",
-                                    "Código: ${response.code()}, cuerpo: ${response.body()}"
-                                )
+
                                 if (response.isSuccessful) {
                                     Log.d("Login", "Respuesta recibida ${response.body()}")
                                     val usuario = response.body()!!
                                     prefs.edit()
                                         .putString("TOKEN_KEY", usuario.token)
-                                        .putString("name", usuario.username)
+                                        .putString("username", usuario.username)
                                         .putLong("idUsuario", usuario.id)
                                         .apply()
 

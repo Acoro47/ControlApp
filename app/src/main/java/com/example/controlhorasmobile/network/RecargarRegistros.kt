@@ -10,7 +10,7 @@ suspend fun recargarRegistros(
     idUsuario: Long,
     desde: LocalDate,
     hasta: LocalDate,
-    tokenProvider:() -> String?
+    token: String
 
 ): List<Registro> {
     val formatter = DateTimeFormatter.ISO_LOCAL_DATE

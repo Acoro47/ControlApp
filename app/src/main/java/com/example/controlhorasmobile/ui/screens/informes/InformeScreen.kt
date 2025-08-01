@@ -1,6 +1,7 @@
 package com.example.controlhorasmobile.ui.screens.informes
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,17 +39,20 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.navigation.NavController
+import com.example.controlhorasmobile.model.Registro
 import com.example.controlhorasmobile.model.ResumenDia
+import com.example.controlhorasmobile.model.dto.toRegistro
+import com.example.controlhorasmobile.network.RetrofitClient
+import com.example.controlhorasmobile.network.UsuarioService
+import com.example.controlhorasmobile.ui.screens.dashboard.logic.DashboardCalculations.toIsoString
 import com.example.controlhorasmobile.ui.screens.informes.components.BotonInforme
-import com.example.controlhorasmobile.ui.screens.informes.logic.resumenPeriodo
+import com.example.controlhorasmobile.ui.screens.informes.logic.registrosDia
 import com.example.controlhorasmobile.ui.theme.Blanco
 import com.example.controlhorasmobile.utils.cerrarSesion
 
 
 @Composable
 fun InformeScreen(
-    idUsuario: Long,
-    modifier: Modifier = Modifier,
     navController: NavController,
 )
 
@@ -59,22 +63,39 @@ fun InformeScreen(
 
     val prefs = context.getSharedPreferences("usuario", Context.MODE_PRIVATE)
     val username = prefs.getString("username", "Usuario") ?: "--"
-    val token = prefs.getString("token", "") ?: ""
+    val idUsuario = prefs.getLong("idUsuario",-1)
+    val token = prefs.getString("TOKEN_KEY", "") ?: ""
 
     val formato = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val fechaFormato = formato.format(Date())
 
     val resumenes = remember { mutableStateListOf<ResumenDia>() }
+    val registrosDiaList = remember { mutableStateListOf<Registro>() }
 
-    LaunchedEffect(fechaInicio.value, fechaFin.value) {
-        //val nuevos = resumenPeriodo(token,idUsuario, fechaInicio.value, fechaFin.value, context)
-        resumenes.clear()
-        //resumenes.addAll(nuevos)
+    val usuarioService = remember {
+        RetrofitClient.getService(
+            UsuarioService::class.java,
+            tokenProvider = { prefs.getString("TOKEN_KEY", token)}
+        )
     }
 
+    LaunchedEffect(fechaInicio.value, fechaFin.value) {
+        val inicio = fechaInicio.value.toIsoString()
+        val fin = fechaFin.value.toIsoString()
+        val registrosDto = usuarioService.obtenerRegistros(idUsuario, inicio,fin)
+        val registros: List<Registro> = registrosDto.map { it.toRegistro() }
+
+        val nuevosResumenes = registrosDia(registros).toList()
+
+        Log.e("Http", "Registros recibidos en informe: ${registrosDto.size}")
+        resumenes.clear()
+        resumenes.addAll(nuevosResumenes)
+    }
 
     val minutosTotales = resumenes.sumOf { it.totalMinutos}
+    Log.e("Http", "minutos totales: $minutosTotales")
     val resumenFormateado = "${minutosTotales / 60} h ${minutosTotales % 60 } m"
+    Log.e("Http", "resumen formateado: $resumenFormateado")
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -129,7 +150,7 @@ fun InformeScreen(
     ) { innerPadding ->
 
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(

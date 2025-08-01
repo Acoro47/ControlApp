@@ -18,6 +18,7 @@ fun registrosDia(registros: List<Registro>): List<ResumenDia> {
 
     return registros
         .groupBy { it.fecha }
+        .toSortedMap(compareBy { LocalDate.parse(it, formatoFecha)})
         .map {
             (fechaStr, registrosDelDia) ->
             val fecha = LocalDate.parse(fechaStr, formatoFecha)
@@ -76,28 +77,5 @@ fun registrosDia(registros: List<Registro>): List<ResumenDia> {
                 totalMinutos = duracionEnMinutos
             )
 
-            }
-}
-
-suspend fun resumenPeriodo(
-    tokenProvider: () -> String,
-    idUsuario: Long,
-    fechaInicio: LocalDate,
-    fechaFin: LocalDate,
-    context: Context,
-
-): List<ResumenDia> {
-    return try {
-        val registros = recargarRegistros(
-            idUsuario,
-            fechaInicio,
-            fechaFin,
-            tokenProvider
-        )
-        registrosDia(registros)
-    }
-    catch (e: Exception){
-        Log.e("Resumen", "Error al obtener resumen: ${e.message}")
-        emptyList()
-    }
+        }
 }

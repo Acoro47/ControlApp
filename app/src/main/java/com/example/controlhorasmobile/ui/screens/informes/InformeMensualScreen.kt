@@ -1,20 +1,13 @@
 package com.example.controlhorasmobile.ui.screens.informes
 
 import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -22,7 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.example.controlhorasmobile.model.ResumenDia
 import com.example.controlhorasmobile.network.InformePdfService
@@ -31,36 +24,27 @@ import com.example.controlhorasmobile.ui.screens.dashboard.CabeceraDashboardScre
 import com.example.controlhorasmobile.ui.screens.informes.components.AccionesInforme
 import com.example.controlhorasmobile.ui.screens.informes.components.EncabezadoInforme
 import com.example.controlhorasmobile.ui.screens.informes.components.ResumenTotales
-import com.example.controlhorasmobile.ui.screens.informes.components.TablaInformeMensual
 import com.example.controlhorasmobile.ui.screens.informes.components.mostrarFechaPicker
-import com.example.controlhorasmobile.ui.screens.informes.logic.openPdf
-import com.example.controlhorasmobile.ui.screens.informes.logic.resumenPeriodo
 import com.example.controlhorasmobile.ui.theme.AzulNoche
-import com.example.controlhorasmobile.ui.theme.Blanco
 import com.example.controlhorasmobile.utils.capitalizar
 import com.example.controlhorasmobile.utils.cerrarSesion
-import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
 import org.threeten.bp.format.DateTimeFormatter
-import java.io.File
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @Composable
 fun InformePreviewScreen(
-    idUsuario: Long,
-    context: Context,
     navController: NavController
 ) {
-
+    val context = LocalContext.current
     val mesSeleccionado = remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
     val tarifaExtra = remember { mutableDoubleStateOf(9.0) }
     val resumenes = remember { mutableStateListOf<ResumenDia>() }
 
     val prefs = context.getSharedPreferences("usuario", Context.MODE_PRIVATE)
-    val token = prefs.getString("token","")
+    val token = prefs.getString("TOKEN_KEY","")
     val username = prefs.getString("username", "Usuario") ?: "--"
 
     val formato = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())

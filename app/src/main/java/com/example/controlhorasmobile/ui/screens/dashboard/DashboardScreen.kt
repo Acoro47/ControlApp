@@ -52,7 +52,7 @@ fun DashboardScreen(navController: NavController) {
 
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("usuario", Context.MODE_PRIVATE)
-    val token = prefs.getString("token", "").orEmpty()
+    val token = prefs.getString("TOKEN_KEY", "").orEmpty()
 
 
     val idUsuario = prefs.getLong("idUsuario", -1L)
