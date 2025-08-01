@@ -1,13 +1,21 @@
 package com.example.controlhorasmobile.ui.screens.informes
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -15,14 +23,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.controlhorasmobile.model.Registro
 import com.example.controlhorasmobile.model.ResumenDia
+import com.example.controlhorasmobile.model.dto.toRegistro
+import com.example.controlhorasmobile.network.RetrofitClient
+import com.example.controlhorasmobile.network.UsuarioService
 import com.example.controlhorasmobile.ui.screens.dashboard.CabeceraDashboardScreen
+import com.example.controlhorasmobile.ui.screens.dashboard.logic.DashboardCalculations.toIsoString
 import com.example.controlhorasmobile.ui.screens.informes.components.AccionesInforme
 import com.example.controlhorasmobile.ui.screens.informes.components.EncabezadoInforme
 import com.example.controlhorasmobile.ui.screens.informes.components.ResumenTotales
+import com.example.controlhorasmobile.ui.screens.informes.components.TablaInformeMensual
 import com.example.controlhorasmobile.ui.screens.informes.components.mostrarFechaPicker
+import com.example.controlhorasmobile.ui.screens.informes.logic.registrosDia
+import com.example.controlhorasmobile.ui.screens.informes.logic.rememberPdfSaver
 import com.example.controlhorasmobile.ui.theme.AzulNoche
+import com.example.controlhorasmobile.ui.theme.Blanco
+import com.example.controlhorasmobile.ui.viewModels.InformeUiState
+import com.example.controlhorasmobile.ui.viewModels.InformeViewModel
 import com.example.controlhorasmobile.utils.capitalizar
 import com.example.controlhorasmobile.utils.cerrarSesion
 import org.threeten.bp.LocalDate
@@ -38,11 +59,12 @@ fun InformePreviewScreen(
     val context = LocalContext.current
     val mesSeleccionado = remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
     val tarifaExtra = remember { mutableDoubleStateOf(9.0) }
-    val resumenes = remember { mutableStateListOf<ResumenDia>() }
+    val resumenMensual = remember { mutableStateListOf<ResumenDia>() }
 
     val prefs = context.getSharedPreferences("usuario", Context.MODE_PRIVATE)
     val username = prefs.getString("username", "Usuario") ?: "--"
-
+    val token = prefs.getString("TOKEN_KEY","")
+    val idUsuario = prefs.getLong("idUsuario",-1)
     val formato = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val fechaFormato = formato.format(Date())
 
@@ -50,10 +72,10 @@ fun InformePreviewScreen(
     val fechaFormateada = mesSeleccionado.value.format(formatter).capitalizar()
 
     // Cálculos
-    val laborables = resumenes.filter {
+    val laborables = resumenMensual.filter {
         it.diaSemana.lowercase() !in listOf("sábado", "domingo")
     }
-    val findes = resumenes.filter {
+    val findes = resumenMensual.filter {
         it.diaSemana.lowercase() in listOf("sábado", "domingo")
     }
     val horasLaborables = laborables.sumOf { maxOf(0, it.totalMinutos - 240) }
@@ -63,6 +85,33 @@ fun InformePreviewScreen(
     val importeLaboral = (horasLaborables / 60.0) * tarifaLaborable
     val importeFinde = (horasFindes / 60.0) * tarifaFinde
     val totalEuros = importeLaboral + importeFinde
+
+
+    val viewModel: InformeViewModel = hiltViewModel()
+    val uiState = viewModel.uiState.collectAsState().value
+    val pdfSaver = rememberPdfSaver { uri ->
+        val bytes = (uiState as? InformeUiState.Success)?.pdfBytes
+        if (bytes != null){
+            viewModel.guardarInforme(uri, context.contentResolver, bytes)
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/pdf")
+                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.packageManager?.let { pm ->
+                if (intent.resolveActivity(pm) != null) {
+                    context.startActivity(intent)
+                }
+            }
+        }
+    }
+
+    val usuarioService = remember {
+        RetrofitClient.getService(
+            UsuarioService::class.java,
+            tokenProvider = { prefs.getString("TOKEN_KEY", token)}
+        )
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -107,6 +156,9 @@ fun InformePreviewScreen(
                     }
                 },
                 onExportar = {
+
+                    pdfSaver.launch("Informe_$fechaFormateada.pdf")
+
 /*
                     val mesParam = mesSeleccionado.value.format(DateTimeFormatter.ofPattern("yyyy-MM"))
                     val bearer = "Bearer $token"
@@ -149,21 +201,19 @@ fun InformePreviewScreen(
                 }
             )
 
-/*
-            LaunchedEffect(mesSeleccionado.value) {
-                val inicio = mesSeleccionado.value.withDayOfMonth(1)
-                val fin =
-                    mesSeleccionado.value.withDayOfMonth(mesSeleccionado.value.lengthOfMonth())
 
-                val nuevos = resumenPeriodo(
-                    token,
-                    idUsuario,
-                    inicio,
-                    fin,
-                    context
-                    )
-                resumenes.clear()
-                resumenes.addAll(nuevos)
+            LaunchedEffect(mesSeleccionado.value) {
+
+                val inicio = mesSeleccionado.value.withDayOfMonth(1).toIsoString()
+                val fin =
+                    mesSeleccionado.value.withDayOfMonth(mesSeleccionado.value.lengthOfMonth()).toIsoString()
+
+                val registrosMesDto = usuarioService.obtenerRegistros(idUsuario, inicio,fin)
+                val registrosMes: List<Registro> = registrosMesDto.map { it.toRegistro() }
+                val resumenMuestra = registrosDia(registrosMes).toList()
+
+                resumenMensual.clear()
+                resumenMensual.addAll(resumenMuestra)
             }
 
             Box(
@@ -175,9 +225,9 @@ fun InformePreviewScreen(
                         .fillMaxSize()
                 ) {
                     item {
-                        if (resumenes.isNotEmpty()) {
+                        if (resumenMensual.isNotEmpty()) {
                             TablaInformeMensual(
-                                resumenes = resumenes
+                                resumenes = resumenMensual
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -191,7 +241,7 @@ fun InformePreviewScreen(
                     }
                 }
             }
-*/
+
             ResumenTotales(
                 horasLaborables,
                 horasFindes,

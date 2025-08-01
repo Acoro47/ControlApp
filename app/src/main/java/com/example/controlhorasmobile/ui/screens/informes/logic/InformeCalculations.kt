@@ -1,8 +1,11 @@
 package com.example.controlhorasmobile.ui.screens.informes.logic
 
+import android.content.Context
+import android.util.Log
 import org.threeten.bp.format.DateTimeFormatter
 import com.example.controlhorasmobile.model.Registro
 import com.example.controlhorasmobile.model.ResumenDia
+import com.example.controlhorasmobile.network.recargarRegistros
 import org.threeten.bp.Duration
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalTime
@@ -37,7 +40,7 @@ fun registrosDia(registros: List<Registro>): List<ResumenDia> {
 
                 val d2 = segundoTurno?.let {
                     val tEntrada2 = LocalTime.parse(it.horaEntrada, formatoHora)
-                    val tSalida2 = LocalTime.parse(it.horaSalida, formatoFecha)
+                    val tSalida2 = LocalTime.parse(it.horaSalida, formatoHora)
                     Duration.between(tEntrada2,tSalida2)
                 } ?: Duration.ZERO
 
@@ -64,3 +67,5 @@ fun registrosDia(registros: List<Registro>): List<ResumenDia> {
 
         }
 }
+
+

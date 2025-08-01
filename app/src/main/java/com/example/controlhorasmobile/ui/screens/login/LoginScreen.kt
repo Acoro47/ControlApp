@@ -28,7 +28,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import com.example.controlhorasmobile.R
 import com.example.controlhorasmobile.network.AuthService
-import com.example.controlhorasmobile.network.LoginRequest
+import com.example.controlhorasmobile.model.dto.LoginRequest
 import com.example.controlhorasmobile.network.RetrofitClient
 import com.example.controlhorasmobile.ui.theme.AzulNoche
 import com.example.controlhorasmobile.ui.theme.AzulProfundo

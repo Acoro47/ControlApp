@@ -1,6 +1,8 @@
 package com.example.controlhorasmobile.network
 
 import com.example.controlhorasmobile.model.DatosActivacion
+import com.example.controlhorasmobile.model.dto.LoginRequest
+import com.example.controlhorasmobile.model.dto.TokenRequest
 import com.example.controlhorasmobile.model.dto.UsuarioDTO
 import retrofit2.Response
 import retrofit2.http.Body

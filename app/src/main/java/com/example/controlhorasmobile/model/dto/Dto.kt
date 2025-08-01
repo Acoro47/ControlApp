@@ -1,4 +1,4 @@
-package com.example.controlhorasmobile.network
+package com.example.controlhorasmobile.model.dto
 
 data class LoginRequest(
     val username: String,
