@@ -1,11 +1,8 @@
 package com.example.controlhorasmobile.ui.screens.informes.logic
 
-import android.content.Context
-import android.util.Log
 import org.threeten.bp.format.DateTimeFormatter
 import com.example.controlhorasmobile.model.Registro
 import com.example.controlhorasmobile.model.ResumenDia
-import com.example.controlhorasmobile.network.recargarRegistros
 import org.threeten.bp.Duration
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalTime
@@ -25,7 +22,7 @@ fun registrosDia(registros: List<Registro>): List<ResumenDia> {
             val entradasValidas = registrosDelDia.filter { it.horaEntrada.isNotBlank() && it.horaSalida.isNotBlank()  }
 
             val primerTurno = entradasValidas.firstOrNull()
-            val segundoTurno = if (entradasValidas.size >1) entradasValidas.getOrNull(1) else null
+            val segundoTurno = if (entradasValidas.size > 1) entradasValidas.getOrNull(1) else null
 
             val entrada1 = primerTurno?.horaEntrada
             val salida1 = primerTurno?.horaSalida
@@ -38,14 +35,11 @@ fun registrosDia(registros: List<Registro>): List<ResumenDia> {
                 val tSalida1 = LocalTime.parse(salida1, formatoHora)
                 val d1 = Duration.between(tEntrada1, tSalida1)
 
-                val d2 = if (entrada2 != null && salida2 != null) {
-                    val tEntrada2 = LocalTime.parse(entrada2, formatoHora)
-                    val tSalida2 = LocalTime.parse(salida2, formatoHora)
-                    Duration.between(tEntrada2, tSalida2)
-                }
-                else {
-                    Duration.ZERO
-                }
+                val d2 = segundoTurno?.let {
+                    val tEntrada2 = LocalTime.parse(it.horaEntrada, formatoHora)
+                    val tSalida2 = LocalTime.parse(it.horaSalida, formatoFecha)
+                    Duration.between(tEntrada2,tSalida2)
+                } ?: Duration.ZERO
 
                 val total = d1.plus(d2)
                 val h = total.toHours()
@@ -56,15 +50,6 @@ fun registrosDia(registros: List<Registro>): List<ResumenDia> {
                 Pair(texto, minutos)
 
             }.getOrDefault(Pair(null,0))
-            Log.d("Resumen", "diaMes: ${fecha.dayOfMonth}")
-            Log.d("Resumen", "diaSemana: ${fecha.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("es"))}")
-            Log.d("Resumen", "entrada1: $entrada1")
-            Log.d("Resumen", "salida1: $salida1")
-            Log.d("Resumen", "entrada2: $entrada2")
-            Log.d("Resumen", "salida2: $salida2")
-            Log.d("Resumen", "Duración $duracionTotal")
-
-
 
             ResumenDia(
                 diaMes = fecha.dayOfMonth.toString(),

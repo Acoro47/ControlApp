@@ -70,7 +70,6 @@ fun InformeScreen(
     val fechaFormato = formato.format(Date())
 
     val resumenes = remember { mutableStateListOf<ResumenDia>() }
-    val registrosDiaList = remember { mutableStateListOf<Registro>() }
 
     val usuarioService = remember {
         RetrofitClient.getService(

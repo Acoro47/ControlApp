@@ -12,14 +12,11 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.example.controlhorasmobile.model.ResumenDia
-import com.example.controlhorasmobile.network.InformePdfService
-import com.example.controlhorasmobile.network.RetrofitClient
 import com.example.controlhorasmobile.ui.screens.dashboard.CabeceraDashboardScreen
 import com.example.controlhorasmobile.ui.screens.informes.components.AccionesInforme
 import com.example.controlhorasmobile.ui.screens.informes.components.EncabezadoInforme
@@ -44,7 +41,6 @@ fun InformePreviewScreen(
     val resumenes = remember { mutableStateListOf<ResumenDia>() }
 
     val prefs = context.getSharedPreferences("usuario", Context.MODE_PRIVATE)
-    val token = prefs.getString("TOKEN_KEY","")
     val username = prefs.getString("username", "Usuario") ?: "--"
 
     val formato = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -67,10 +63,6 @@ fun InformePreviewScreen(
     val importeLaboral = (horasLaborables / 60.0) * tarifaLaborable
     val importeFinde = (horasFindes / 60.0) * tarifaFinde
     val totalEuros = importeLaboral + importeFinde
-
-    val scope = rememberCoroutineScope()
-
-    val api = { RetrofitClient.getService(InformePdfService::class.java) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
