@@ -2,7 +2,6 @@ package com.example.controlhorasmobile.ui.screens.dashboard.logic
 
 import android.util.Log
 import com.example.controlhorasmobile.model.Registro
-import com.example.controlhorasmobile.model.dto.RegistroDTO
 import org.threeten.bp.LocalDate
 
 import org.threeten.bp.format.DateTimeFormatter

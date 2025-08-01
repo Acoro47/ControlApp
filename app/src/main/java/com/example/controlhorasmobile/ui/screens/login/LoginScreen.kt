@@ -30,7 +30,6 @@ import com.example.controlhorasmobile.R
 import com.example.controlhorasmobile.network.AuthService
 import com.example.controlhorasmobile.network.LoginRequest
 import com.example.controlhorasmobile.network.RetrofitClient
-import com.example.controlhorasmobile.network.UsuarioService
 import com.example.controlhorasmobile.ui.theme.AzulNoche
 import com.example.controlhorasmobile.ui.theme.AzulProfundo
 import com.example.controlhorasmobile.ui.theme.Blanco
@@ -53,7 +52,6 @@ fun LoginScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     var logoVisible by remember { mutableStateOf(false) }
     val authService = RetrofitClient.getService(AuthService::class.java)
-    val usuarioService = RetrofitClient.getService(UsuarioService::class.java)
 
     LaunchedEffect(Unit) {
         logoVisible = true
@@ -158,8 +156,8 @@ fun LoginScreen(navController: NavController) {
                         scope.launch {
                             try {
 
-                                val response = usuarioService.loginUsuario(
-                                    UsuarioService.LoginRequest(username,password)
+                                val response = authService.loginUsuario(
+                                    LoginRequest(username,password)
                                 )
                                 Log.d(
                                     "Login",
@@ -170,6 +168,8 @@ fun LoginScreen(navController: NavController) {
                                     val usuario = response.body()!!
                                     prefs.edit()
                                         .putString("TOKEN_KEY", usuario.token)
+                                        .putString("name", usuario.username)
+                                        .putLong("idUsuario", usuario.id)
                                         .apply()
 
 

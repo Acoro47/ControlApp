@@ -1,5 +1,6 @@
 package com.example.controlhorasmobile.network
 
+import android.util.Log
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -18,13 +19,15 @@ object RetrofitClient {
         tokenProvider: (() ->String?)?= null,
         pdfMode: Boolean = false
     ): OkHttpClient {
-        val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.HEADERS
+        val logging = HttpLoggingInterceptor { message ->
+            Log.d("Http", message)
+        }.apply {
+            level = HttpLoggingInterceptor.Level.BODY
         }
 
        return OkHttpClient.Builder()
            .addInterceptor(AuthInterceptor(tokenProvider ?: { null }))
-           .addNetworkInterceptor(logging)
+           .addInterceptor(logging)
            .followRedirects(false)
            .followSslRedirects(false)
            .also { builder ->
