@@ -39,6 +39,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.navigation.NavController
+import com.example.controlhorasmobile.PREFS_NAME
+import com.example.controlhorasmobile.TOKEN_KEY
 import com.example.controlhorasmobile.model.Registro
 import com.example.controlhorasmobile.model.ResumenDia
 import com.example.controlhorasmobile.model.dto.toRegistro
@@ -61,7 +63,7 @@ fun InformeScreen(
     val fechaInicio = remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
     val fechaFin = remember { mutableStateOf(LocalDate.now()) }
 
-    val prefs = context.getSharedPreferences("usuario", Context.MODE_PRIVATE)
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     val username = prefs.getString("username", "Usuario") ?: "--"
     val idUsuario = prefs.getLong("idUsuario",-1)
     val token = prefs.getString("TOKEN_KEY", "") ?: ""
@@ -140,6 +142,7 @@ fun InformeScreen(
                 BotonInforme(
                     label = "Generar Informe",
                     onClick = {
+                        Log.d("Http", "Token guardado/obtenido = ${prefs.getString(TOKEN_KEY, null)}")
                         navController.navigate("informeMensual")
                     }
                 )

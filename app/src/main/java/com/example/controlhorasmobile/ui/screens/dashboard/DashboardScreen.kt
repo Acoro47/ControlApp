@@ -96,9 +96,6 @@ fun DashboardScreen(navController: NavController) {
         scope.launch {
             isLoading.value = true
             try {
-
-                val hoy = LocalDate.now()
-
                 val desde = inicio
                 val hasta = fin
 

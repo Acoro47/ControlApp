@@ -25,19 +25,22 @@ object RetrofitClient {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
-       return OkHttpClient.Builder()
-           .addInterceptor(AuthInterceptor(tokenProvider ?: { null }))
+       val builder =  OkHttpClient.Builder()
            .addInterceptor(logging)
            .followRedirects(false)
            .followSslRedirects(false)
-           .also { builder ->
-               tokenProvider?.let { provider ->
-                   builder.addInterceptor(AuthInterceptor(provider))
-               }
-           }
-           .connectTimeout(30, TimeUnit.SECONDS)
-           .readTimeout(30, TimeUnit.SECONDS)
-           .build()
+           .connectTimeout(
+               if (pdfMode) 60 else 30,
+                TimeUnit.SECONDS
+        )
+        .readTimeout(
+            if (pdfMode) 60 else 30,
+            TimeUnit.SECONDS
+        )
+        tokenProvider?.let { provider ->
+            builder.addInterceptor(AuthInterceptor(provider))
+        }
+        return builder.build()
     }
 
     /**

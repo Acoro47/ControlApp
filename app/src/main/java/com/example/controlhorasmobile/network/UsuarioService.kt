@@ -2,7 +2,6 @@ package com.example.controlhorasmobile.network
 
 import com.example.controlhorasmobile.model.DatosActivacion
 import com.example.controlhorasmobile.model.dto.RegistroDTO
-import com.example.controlhorasmobile.model.dto.UsuarioDTO
 import retrofit2.Response
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -17,11 +16,6 @@ interface UsuarioService {
         val mensaje: String
     )
 
-    data class LoginRequest(
-        val username: String,
-        val password: String
-    )
-
     @GET("activar")
     suspend fun activarCuenta(@Query("token") token:String): Response<DatosActivacion>
 
@@ -30,12 +24,6 @@ interface UsuarioService {
         @Query("username") username:String,
         @Query("email") email:String
     ): Response<MensajeRespuesta>
-
-
-    @POST("api/login")
-    suspend fun loginUsuario(
-        @retrofit2.http.Body loginRequest: LoginRequest
-    ): Response<UsuarioDTO>
 
     @GET("api/registros")
     suspend fun obtenerRegistros(

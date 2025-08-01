@@ -2,6 +2,8 @@ package com.example.controlhorasmobile.ui.screens.informes
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,12 +22,14 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.controlhorasmobile.PREFS_NAME
 import com.example.controlhorasmobile.model.Registro
 import com.example.controlhorasmobile.model.ResumenDia
 import com.example.controlhorasmobile.model.dto.toRegistro
@@ -46,7 +50,9 @@ import com.example.controlhorasmobile.ui.viewModels.InformeUiState
 import com.example.controlhorasmobile.ui.viewModels.InformeViewModel
 import com.example.controlhorasmobile.utils.capitalizar
 import com.example.controlhorasmobile.utils.cerrarSesion
+import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
+import org.threeten.bp.YearMonth
 import org.threeten.bp.format.DateTimeFormatter
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -61,7 +67,7 @@ fun InformePreviewScreen(
     val tarifaExtra = remember { mutableDoubleStateOf(9.0) }
     val resumenMensual = remember { mutableStateListOf<ResumenDia>() }
 
-    val prefs = context.getSharedPreferences("usuario", Context.MODE_PRIVATE)
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     val username = prefs.getString("username", "Usuario") ?: "--"
     val token = prefs.getString("TOKEN_KEY","")
     val idUsuario = prefs.getLong("idUsuario",-1)
@@ -86,21 +92,24 @@ fun InformePreviewScreen(
     val importeFinde = (horasFindes / 60.0) * tarifaFinde
     val totalEuros = importeLaboral + importeFinde
 
-
+    val scope = rememberCoroutineScope()
     val viewModel: InformeViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsState().value
     val pdfSaver = rememberPdfSaver { uri ->
-        val bytes = (uiState as? InformeUiState.Success)?.pdfBytes
-        if (bytes != null){
-            viewModel.guardarInforme(uri, context.contentResolver, bytes)
+        val bytes = (uiState as? InformeUiState.Success)?.pdfBytes ?: return@rememberPdfSaver
 
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "application/pdf")
-                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.packageManager?.let { pm ->
-                if (intent.resolveActivity(pm) != null) {
-                    context.startActivity(intent)
+        scope.launch {
+            val ok = viewModel.guardarInforme(uri, context.contentResolver, bytes)
+
+            if (ok){
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/pdf")
+                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.packageManager?.let { pm ->
+                    if (intent.resolveActivity(pm) != null) {
+                        context.startActivity(intent)
+                    }
                 }
             }
         }
@@ -156,8 +165,23 @@ fun InformePreviewScreen(
                     }
                 },
                 onExportar = {
+                    val mesParam = mesSeleccionado.value.format(DateTimeFormatter.ofPattern("yyyy-MM"))
+                    scope.launch {
+                        Log.d("Http", "Token antes de la petición PDF: $token")
+                        viewModel.descargarInforme(YearMonth.parse(mesParam, DateTimeFormatter.ofPattern("yyyy-MM")))
 
-                    pdfSaver.launch("Informe_$fechaFormateada.pdf")
+                        viewModel.uiState.collect {
+                            if (it is InformeUiState.Success){
+                                pdfSaver.launch("Informe_$fechaFormateada.pdf")
+                                return@collect
+                            } else if (it is InformeUiState.Error){
+                                Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
+                                return@collect
+                            }
+                        }
+                    }
+
+
 
 /*
                     val mesParam = mesSeleccionado.value.format(DateTimeFormatter.ofPattern("yyyy-MM"))

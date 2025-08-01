@@ -1,5 +1,6 @@
 package com.example.controlhorasmobile.network
 
+import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.Response
 
@@ -10,12 +11,16 @@ class AuthInterceptor(
     override fun intercept(chain: Interceptor.Chain): Response {
        // Obtenemos el token dinámicamente
         val token = tokenProvider()?.takeIf { it.isNotBlank() }
+        Log.e("Http","Token recuperado: $token")
 
-        val builder = chain.request().newBuilder().apply {
-            token?.let { header("Authorization","Bearer $it") }
+        val request = chain.request().newBuilder().apply {
+            token?.let {
+                header("Authorization","Bearer $it")
+                Log.d("Http", "Authorization: Bearer $it")
+            }
             header("Accept", acceptHeader)
-        }
+        }.build()
 
-        return chain.proceed(builder.build())
+        return chain.proceed(request)
     }
 }

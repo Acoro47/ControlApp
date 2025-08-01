@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
+import com.example.controlhorasmobile.PREFS_NAME
 import com.example.controlhorasmobile.R
 import com.example.controlhorasmobile.network.AuthService
 import com.example.controlhorasmobile.model.dto.LoginRequest
@@ -43,7 +44,7 @@ import kotlinx.coroutines.launch
 fun LoginScreen(navController: NavController) {
 
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("usuario", Context.MODE_PRIVATE)
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val isPasswordVisible = remember { mutableStateOf(false) }
@@ -180,7 +181,7 @@ fun LoginScreen(navController: NavController) {
                                     mensaje = "❌ Usuario o contraseña incorrectos"
                                 }
                             } catch (e: Exception) {
-                                mensaje = "⚠\uFE0F Error de red: ${e.message}"
+                                mensaje = "⚠\uFE0F Error de red: ${e.message}, pruebe de nuevo mas tarde"
                             }
                         }
                     },
