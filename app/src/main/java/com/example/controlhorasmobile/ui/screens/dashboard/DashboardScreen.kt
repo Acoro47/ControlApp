@@ -37,7 +37,9 @@ import com.example.controlhorasmobile.ui.screens.dashboard.components.CardResume
 import com.example.controlhorasmobile.ui.screens.dashboard.logic.DashboardCalculations
 import com.example.controlhorasmobile.ui.screens.dashboard.logic.DashboardCalculations.toIsoString
 import com.example.controlhorasmobile.ui.theme.AzulNoche
+import com.example.controlhorasmobile.ui.theme.AzulProfundo
 import com.example.controlhorasmobile.ui.theme.ColorSecundario
+import com.example.controlhorasmobile.ui.theme.VerdeBrisa
 import com.example.controlhorasmobile.utils.cerrarSesion
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
@@ -353,18 +355,34 @@ fun DashboardScreen(navController: NavController) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(16.dp)
+                                .background(
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(MaterialTheme.colorScheme.background, AzulProfundo),
+                                        startY = 0f,
+                                        endY = 900f
+                                    )
+                                )
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
                         ){
                             if (registrosHoy.isEmpty()) {
-                                Text(
-                                    text = "Hola ${username.uppercase()}, aún no has registrado ninguna entrada",
-                                    style = MaterialTheme.typography.titleSmall
-                                )
-                                Spacer(modifier = Modifier.height(18.dp))
-                                Text(
-                                    text ="Para registrar el inicio pulsa Entrada",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
+                                Column(
+                                    modifier = Modifier
+                                        .padding(8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Hola ${username.uppercase()}, aún no has registrado ninguna entrada",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = AzulProfundo
+                                    )
+                                    Spacer(modifier = Modifier.height(18.dp))
+                                    Text(
+                                        text = "Para registrar el inicio pulsa Entrada",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = VerdeBrisa
+                                    )
+                                }
                             } else {
 
                                 LazyColumn {

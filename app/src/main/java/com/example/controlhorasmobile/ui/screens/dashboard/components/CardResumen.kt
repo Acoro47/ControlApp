@@ -51,7 +51,8 @@ fun CardResumen(
 
         ){
             Column(
-                modifier = Modifier.padding(8.dp),
+                modifier = Modifier
+                    .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
