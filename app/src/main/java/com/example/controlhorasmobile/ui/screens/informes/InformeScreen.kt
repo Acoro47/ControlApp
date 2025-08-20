@@ -83,7 +83,7 @@ fun InformeScreen(
     LaunchedEffect(fechaInicio.value, fechaFin.value) {
         val inicio = fechaInicio.value.toIsoString()
         val fin = fechaFin.value.toIsoString()
-        val registrosDto = usuarioService.obtenerRegistros(idUsuario, inicio,fin)
+        val registrosDto = usuarioService.obtenerRegistrosMensuales(idUsuario, inicio,fin)
         val registros: List<Registro> = registrosDto.map { it.toRegistro() }
 
         val nuevosResumenes = registrosDia(registros).toList()

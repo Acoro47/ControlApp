@@ -18,7 +18,7 @@ suspend fun recargarRegistros(
     val hastaStr = hasta.format(formatter)
     return try {
         val usuarioService = RetrofitClient.getService(UsuarioService::class.java)
-        val registrosDTO = usuarioService.obtenerRegistros(
+        val registrosDTO = usuarioService.obtenerRegistrosMensuales(
             idUsuario,
             fechaDesde = desdeStr,
             fechaHasta = hastaStr

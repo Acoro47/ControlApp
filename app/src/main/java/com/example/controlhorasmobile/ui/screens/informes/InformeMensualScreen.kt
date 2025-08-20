@@ -232,7 +232,7 @@ fun InformePreviewScreen(
                 val fin =
                     mesSeleccionado.value.withDayOfMonth(mesSeleccionado.value.lengthOfMonth()).toIsoString()
 
-                val registrosMesDto = usuarioService.obtenerRegistros(idUsuario, inicio,fin)
+                val registrosMesDto = usuarioService.obtenerRegistrosMensuales(idUsuario, inicio,fin)
                 val registrosMes: List<Registro> = registrosMesDto.map { it.toRegistro() }
                 val resumenMuestra = registrosDia(registrosMes).toList()
 

@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.controlhorasmobile.PREFS_NAME
 import com.example.controlhorasmobile.model.Registro
 import com.example.controlhorasmobile.model.RegistroItem
 import com.example.controlhorasmobile.model.dto.RegistroDTO
@@ -53,7 +54,7 @@ import java.util.Locale
 fun DashboardScreen(navController: NavController) {
 
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("usuario", Context.MODE_PRIVATE)
+    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     val token = prefs.getString("TOKEN_KEY", "").orEmpty()
 
 
@@ -82,14 +83,7 @@ fun DashboardScreen(navController: NavController) {
             tokenProvider = { prefs.getString("TOKEN_KEY", token)}
             )
     }
-
-
-
     val isLoading = remember { mutableStateOf(false) }
-    /**
-     * funcion para recargar los registros desde el backend
-     * sin parámetros
-     */
 
     fun recargaRegistros(
         inicio: String,
@@ -98,21 +92,38 @@ fun DashboardScreen(navController: NavController) {
         scope.launch {
             isLoading.value = true
             try {
-                val desde = inicio
-                val hasta = fin
-
-                val nuevosDto: List<RegistroDTO> = usuarioService.obtenerRegistros(
+                // Registros del mes actual
+                val registrosMesDto: List<RegistroDTO> = usuarioService.obtenerRegistrosMensuales(
                     idUsuario,
-                    desde,
-                    hasta
+                    inicio,
+                    fin
                 )
-                Log.e("Dashboard", "Backend devolvió ${nuevosDto.size} registros")
-                nuevosDto.forEachIndexed { index, dto ->
-                    Log.e("Dashboard","Registro[$index]: entrada=${dto.entrada}, salida=${dto.salida}")
+                if (registrosMesDto.isNotEmpty()){
+                    Log.e("Dashboard", "Backend devolvió ${registrosMesDto.size} registros")
+                    registrosMesDto.forEachIndexed { index, dto ->
+                        Log.e("Dashboard","Registro[$index]: entrada=${dto.entrada}, salida=${dto.salida}")
+                    }
                 }
-                val nuevos:List<Registro> = nuevosDto.map { it.toRegistro() }
+
+                val regsMes:List<Registro> = registrosMesDto.map { it.toRegistro() }
+                registrosMes.clear()
+                registrosMes.addAll(regsMes)
+
+                // Registros de hoy
+
+                val registrosHoyDto: List<RegistroDTO> = usuarioService.obtenerRegistrosHoy(
+                    idUsuario
+                )
+                if (registrosHoyDto.isNotEmpty()){
+                    Log.e("Dashboard", "Backend devolvió ${registrosHoyDto.size} registros")
+                    registrosHoyDto.forEachIndexed { index, dto ->
+                        Log.e("Dashboard","Registro[$index]: entrada=${dto.entrada}, salida=${dto.salida}")
+                    }
+                }
+
+                val regsHoy:List<Registro> = registrosHoyDto.map { it.toRegistro() }
                 registrosHoy.clear()
-                registrosHoy.addAll(nuevos)
+                registrosHoy.addAll(regsHoy)
 
             } catch (e: retrofit2.HttpException) {
                 if (e.code() == 401){
@@ -132,10 +143,22 @@ fun DashboardScreen(navController: NavController) {
         }
     }
 
+    fun cargarDashboard(){
+        scope.launch {
+            isLoading.value = true
+            val inicio = LocalDate.now().withDayOfMonth(1).toIsoString()
+            val fin = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()).toIsoString()
+
+            recargaRegistros(inicio,fin)
+            isLoading.value = false
+        }
+    }
+
     /**
      * Función para registrar las horas de entrada
      */
     fun registroEntrada() {
+        Log.e("Entrada", "Registrando una entrada")
         val hayEntradaSinSalida = registrosHoy.any {
             it.horaEntrada != "-" && it.horaSalida == "-"
         }
@@ -154,6 +177,7 @@ fun DashboardScreen(navController: NavController) {
                 val hoy = LocalDate.now().toIsoString()
                 val response = usuarioService.registrarEntrada(idUsuario)
                 Log.e("Dashboard", "Llamando a la función de registrar entrada")
+                Log.e("Dashboard", "Respuesta del servidor: ${response.body()}")
                 if (response.isSuccessful) {
                     Log.d("Entrada", "✅ Entrada registrada")
                     recargaRegistros(hoy,hoy)
@@ -197,53 +221,8 @@ fun DashboardScreen(navController: NavController) {
 
     // Cargar los datos al abrir la pantalla
     LaunchedEffect(Unit) {
-        Log.e("Http","Entrando en el LaunchedEffect")
-        Log.e("Http","Valor idUsuario: $idUsuario")
         isLoading.value = true
-        try {
-
-            if (idUsuario != -1L) {
-                val hoyString = LocalDate.now().toIsoString()
-
-                Log.e("Http","Antes de obtenerRegistros")
-                val registrosDiaDto: List<RegistroDTO> = usuarioService.obtenerRegistros(
-                    idUsuario,
-                    hoyString,
-                    hoyString
-                )
-                Log.e("Http","Despues de obtenerRegistros")
-                val registrosDia: List<Registro> = registrosDiaDto.map { it.toRegistro() }
-                registrosHoy.clear()
-                registrosHoy.addAll(registrosDia)
-
-                val (inicio, fin) = DashboardCalculations.obtenerRangoMesActual()
-                val registrosMesActualDto: List<RegistroDTO> = usuarioService.obtenerRegistros(
-                    idUsuario,
-                    inicio,
-                    fin
-                )
-                val registros: List<Registro> = registrosMesActualDto.map { it.toRegistro() }
-                registrosMes.clear()
-                registrosMes.addAll(registros)
-
-                recargaRegistros(hoyString,hoyString)
-                recargaRegistros(inicio,fin)
-
-            }
-        } catch (e: retrofit2.HttpException){
-            if (e.code() == 401){
-                navController.navigate("login")
-            } else {
-                Log.e("Dashboard", "Error HTTP ${e.code()}")
-            }
-        }
-        catch (e: Exception) {
-            Log.e("Dashboard","Error de red u otro: ${e.message}")
-        }
-
-        finally {
-            isLoading.value = false
-        }
+        cargarDashboard()
 
     }
 

@@ -37,7 +37,9 @@ import com.example.controlhorasmobile.ui.theme.Blanco
 import com.example.controlhorasmobile.ui.theme.ColorPrimario
 import com.example.controlhorasmobile.ui.theme.VerdeBrisa
 import com.example.controlhorasmobile.ui.theme.customTextFieldColors
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -156,6 +158,7 @@ fun LoginScreen(navController: NavController) {
                     onClick = {
                         scope.launch {
                             try {
+                                Log.d("NavControllerLogin", navController.hashCode().toString())
 
                                 val response = authService.loginUsuario(
                                     LoginRequest(username,password)
@@ -172,9 +175,12 @@ fun LoginScreen(navController: NavController) {
 
 
                                     mensaje = "✅ Inicio correcto"
-                                    navController.navigate("dashboard") {
-                                        popUpTo("login") { inclusive = true }
+                                    withContext(Dispatchers.Main){
+                                        navController.navigate("dashboard") {
+                                            popUpTo("login") { inclusive = true }
+                                        }
                                     }
+
                                 } else {
                                     val errorBody = response.errorBody()?.string()
                                     Log.e("Login", "Error HTTP ${response.code()}: $errorBody")

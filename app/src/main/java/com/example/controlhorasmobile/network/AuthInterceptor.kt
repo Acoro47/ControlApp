@@ -15,10 +15,10 @@ class AuthInterceptor(
 
         val request = chain.request().newBuilder().apply {
             token?.let {
-                header("Authorization","Bearer $it")
+                addHeader("Authorization","Bearer $it")
                 Log.d("Http", "Authorization: Bearer $it")
             }
-            header("Accept", acceptHeader)
+            addHeader("Accept", acceptHeader)
         }.build()
 
         return chain.proceed(request)

@@ -26,19 +26,28 @@ interface UsuarioService {
     ): Response<MensajeRespuesta>
 
     @GET("api/registros")
-    suspend fun obtenerRegistros(
+    suspend fun obtenerRegistrosMensuales(
         @Query("id") idUsuario: Long,
         @Query("fechaDesde") fechaDesde: String,
         @Query("fechaHasta") fechaHasta: String
     ): List<RegistroDTO>
 
+    @GET("api/registros/hoy")
+    suspend fun obtenerRegistrosHoy(
+        @Query("id") idUsuario: Long
+    ): List<RegistroDTO>
+
     @FormUrlEncoded
     @POST("api/entrada")
-    suspend fun registrarEntrada(@Field("idUsuario") idUsuario: Long): Response<Any>
+    suspend fun registrarEntrada(
+        @Field("idUsuario") idUsuario: Long
+    ): Response<MensajeRespuesta>
 
     @FormUrlEncoded
     @POST("api/salida")
-    suspend fun registrarSalida(@Field("idUsuario") idUsuario: Long): Response<Any>
+    suspend fun registrarSalida(
+        @Field("idUsuario") idUsuario: Long
+    ): Response<MensajeRespuesta>
 
 }
 
